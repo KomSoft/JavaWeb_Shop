@@ -1,5 +1,7 @@
 package com.itea.shop;
 
+import com.itea.shop.utils.Encoding;
+
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -26,13 +28,16 @@ public class MainRunner {
 */
 //        testDB.closeConnection();
 
+/*
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            messageDigest.update(StandardCharsets.UTF_8.encode("admin"));
+            messageDigest.update(StandardCharsets.UTF_8.encode("admin@com.com"));
             System.out.println(String.format("%032x", new BigInteger(messageDigest.digest())));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+*/
+/*
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             messageDigest.update(StandardCharsets.UTF_8.encode("admin"));
@@ -40,6 +45,10 @@ public class MainRunner {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+*/
+        System.out.println(Encoding.md5EncryptionWithSalt("admin@com.com"));
+        System.out.println(Encoding.md5Encryption("admin@com.comcom.itea"));
+        System.out.println(Encoding.md5EncryptionWithSalt("admin@com.com"));
 
     }
 }

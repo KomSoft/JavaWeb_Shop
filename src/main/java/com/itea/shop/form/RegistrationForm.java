@@ -30,7 +30,7 @@ public class RegistrationForm {
     public static final String REGISTRATION_FORM = "<center><table border='0'><form action='' method='POST'>" +
             "<tr>" +
             "   <td width='150'>Login</td>" +
-            "   <td width='200'><input type='email' name='login' value='%8$s' /></td>" +
+            "   <td width='200'><input type='email' name='login' value='%9$s' /></td>" +
             "   <td width='250'>%1$s</td>" +
             "</tr>" +
             "<tr>" +
@@ -45,34 +45,34 @@ public class RegistrationForm {
             "</tr>" +
             "<tr>" +
             "   <td>Name</td>" +
-            "   <td><input type='text' name='fullName' value='%9$s' /></td>" +
+            "   <td><input type='text' name='fullName' value='%10$s' /></td>" +
             "   <td>%4$s</td>" +
             "</tr>" +
             "<tr>" +
             "   <td>Region</td>" +
             "   <td><select name='region'>" +
             "      <option value=''>Select your region</option>" +
-            "      <option value='Kyiv' %14$s >Kyiv region</option>" +
-            "      <option value='Lviv' %15$s >Lviv region</option>" +
-            "      <option value='Odesa' %16$s >Odesa region</option>" +
+            "      <option value='Kyiv' %15$s >Kyiv region</option>" +
+            "      <option value='Lviv' %16$s >Lviv region</option>" +
+            "      <option value='Odesa' %17$s >Odesa region</option>" +
             "      </select></td>" +
             "   <td>%5$s</td>" +
             "</tr>" +
             "<tr>" +
             "   <td>Gender</td>" +
-            "   <td>F<input type='radio' name='gender' value='F' %10$s />" +
-            "       M<input type='radio' name='gender' value='M' %11$s />" +
+            "   <td>F<input type='radio' name='gender' value='F' %11$s />" +
+            "       M<input type='radio' name='gender' value='M' %12$s />" +
             "   </td>" +
             "   <td>%6$s</td>" +
             "</tr>" +
             "<tr>" +
             "   <td>Comment</td>" +
-            "   <td><textarea name='comment' cols='21' rows='5'>%12$s</textarea></td>" +
+            "   <td><textarea name='comment' cols='21' rows='5'>%13$s</textarea></td>" +
             "   <td>%7$s</td>" +
             "</tr>" +
             "<tr>" +
             "   <td>Glory to Ukraine</td>" +
-            "   <td><input type='checkbox' name='agreement' %13$s /></td>" +
+            "   <td><input type='checkbox' name='agreement' %14$s /></td>" +
             "   <td>%8$s</td>" +
             "</tr>" +
             "<tr>" +

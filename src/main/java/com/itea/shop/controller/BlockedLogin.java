@@ -4,7 +4,6 @@ import com.itea.shop.entity.UserRegisteringData;
 import com.itea.shop.exception.DataBaseException;
 import com.itea.shop.form.LoginForm;
 import com.itea.shop.form.MenuForm;
-import com.itea.shop.form.Messages;
 import com.itea.shop.repository.PostgreSQLJDBC;
 import com.itea.shop.repository.UserRepository;
 
@@ -18,6 +17,8 @@ import java.io.Serial;
 import java.sql.Connection;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class BlockedLogin extends HttpServlet {
     @Serial
@@ -31,12 +32,14 @@ public class BlockedLogin extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         PostgreSQLJDBC dataBase = new PostgreSQLJDBC();
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", Locale.UK);
         boolean isShowForm = true;
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
         if (endTime != null) {
             long waitSecond = TIME_OUT - Duration.between(endTime, LocalDateTime.now()).getSeconds();
-            message = new StringBuilder(String.format(Messages.WAIT_FOR_TIMEOUT, waitSecond));
+            message = new StringBuilder(String.format(bundle.getString("waitForTimeout"), waitSecond));
+//            message = new StringBuilder(String.format(Messages.WAIT_FOR_TIMEOUT, waitSecond));
             isShowForm = waitSecond <= 0;
             if (isShowForm) {
                 count = -1;
@@ -54,7 +57,8 @@ public class BlockedLogin extends HttpServlet {
                     String fullName = userRepository.getFullNameByLoginAndPassword(login, UserRegisteringData.encryptPassword(password));
                     dataBase.closeConnection();
                     if (fullName != null) {
-                        message = new StringBuilder(String.format(Messages.ACCESS_GRANTED, fullName));
+                        message = new StringBuilder(String.format(bundle.getString("accessGranted"), fullName));
+//                        message = new StringBuilder(String.format(Messages.ACCESS_GRANTED, fullName));
 //                        message = new StringBuilder(Messages.getAccessGrantedForName(fullName));
                         isShowForm = false;
                     } else {
@@ -62,17 +66,20 @@ public class BlockedLogin extends HttpServlet {
                         if (count < MAX_TRY) {
                             message = new StringBuilder();
                             if (count > 0) {
-                                message.append(String.format(Messages.ACCESS_DENIED, (MAX_TRY - count)));
+                                message.append(String.format(bundle.getString("accessDenied"), (MAX_TRY - count)));
+//                                message.append(String.format(Messages.ACCESS_DENIED, (MAX_TRY - count)));
 //                                message.append(Messages.getAccessDenied(MAX_TRY - count));
                             }
                         } else {
                             endTime = LocalDateTime.now();
-                            message = new StringBuilder(String.format(Messages.BLOCKED_FOR_TIMEOUT, TIME_OUT));
+                            message = new StringBuilder(String.format(bundle.getString("blockedForTimeout"), TIME_OUT));
+//                            message = new StringBuilder(String.format(Messages.BLOCKED_FOR_TIMEOUT, TIME_OUT));
                             isShowForm = false;
                         }
                     }
                 } catch (DataBaseException e) {
-                    message = new StringBuilder(String.format(Messages.CANT_CONNECT_DB, e.getMessage()));
+                    message = new StringBuilder(String.format(bundle.getString("dataBaseError"), e.getMessage()));
+//                    message = new StringBuilder(String.format(Messages.CANT_CONNECT_DB, e.getMessage()));
                     isShowForm = false;
                 }
            }

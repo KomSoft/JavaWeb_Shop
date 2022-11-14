@@ -1,9 +1,13 @@
 package com.itea.shop.controller;
 
 import com.itea.shop.entity.UserRegisteringData;
+import com.itea.shop.exception.DataBaseException;
+import com.itea.shop.exception.ValidationException;
 import com.itea.shop.form.MenuForm;
 import com.itea.shop.form.RegistrationForm;
-import com.itea.shop.utils.CheckUser;
+import com.itea.shop.repository.PostgreSQLJDBC;
+import com.itea.shop.repository.UserRepository;
+import com.itea.shop.service.CheckUser;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -12,6 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
+import java.sql.Connection;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public class Registration extends HttpServlet {
     @Serial
@@ -26,8 +33,10 @@ public class Registration extends HttpServlet {
         PrintWriter out = response.getWriter();
         CheckUser checkedUser = new CheckUser(request);
         if (checkedUser.isCorrect()) {
+            ResourceBundle bundle = ResourceBundle.getBundle("messages", Locale.UK);
             UserRegisteringData newUser = new UserRegisteringData(checkedUser.getLogin(), checkedUser.getPassword(),
                     checkedUser.getFullName(), checkedUser.getRegion(), checkedUser.getGender(), checkedUser.getComment());
+            outString.append(MenuForm.MENU);
             outString.append("<center>login = ").append(checkedUser.getLogin())
                     .append("<br>password = ").append(checkedUser.getPassword())
                     .append("<br>encrypted password = ").append(newUser.getEncryptedPassword())
@@ -38,7 +47,18 @@ public class Registration extends HttpServlet {
                     .append("<br>agreement = ").append(checkedUser.getAgreement())
                     .append("<br>");
 //            write to DB, check errors and get result
-            outString.append("<h2 align='center' style='color:blue;'>Register completed</h2>");
+            PostgreSQLJDBC dataBase = new PostgreSQLJDBC();
+            try {
+                Connection connection = dataBase.establishConnection();
+                UserRepository userRepository = new UserRepository(connection);
+                userRepository.saveUser(newUser);
+                outString.append(String.format(bundle.getString("registerCompleted"), newUser.getFullName()));
+//                     .append("<h2 align='center' style='color:blue;'>Register completed.</h2> Now you can login as </h2>");
+            } catch (DataBaseException e) {
+                outString.append(String.format(bundle.getString("dataBaseErrorCantSaveUser"), e.getMessage()));
+            } catch (ValidationException e) {
+                outString.append(String.format(bundle.getString("userIncorrectData"), e.getMessage()));
+            }
             out.write(outString.toString());
 //      Register completed
         } else {

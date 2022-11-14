@@ -2,6 +2,8 @@ package com.itea.shop.repository;
 
 import com.itea.shop.entity.UserRegisteringData;
 import com.itea.shop.exception.DataBaseException;
+import com.itea.shop.exception.ValidationException;
+import com.itea.shop.service.CheckUser;
 
 import java.sql.*;
 import java.util.logging.Level;
@@ -82,35 +84,40 @@ public class UserRepository {
         }
     }
 
-    public UserRegisteringData saveUser(UserRegisteringData user) throws DataBaseException {
-        final String INSERT_USER = "INSERT INTO users (login, password, fullName, region, gender, comment) " +
+    public UserRegisteringData saveUser(UserRegisteringData user) throws DataBaseException, ValidationException {
+        final String INSERT_USER = "INSERT INTO users (login, password, full_name, region, gender, comment) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
-        String fullName = null;
-        checkConnection();
+        if (CheckUser.isUserRegisteringDataCorrect(user)) {
+            checkConnection();
 //        check userRegisteringData
-        try {
-            PreparedStatement statement = connection.prepareStatement(INSERT_USER);
-            statement.setString(1, user.getLogin());
-            statement.setString(2, user.getEncryptedPassword());
-            statement.setString(3, user.getFullName());
-            statement.setString(4, user.getRegion());
-            statement.setString(5, user.getGender());
-            statement.setString(6, user.getComment());
-            int id = statement.executeUpdate();
-            statement.close();
-            if (id == 1) {
-                return user;
-            } else {
-                String error = "[UserRepository] User not saved";
+            try {
+                String fullName = this.getFullNameByLogin(user.getLogin());
+                if (fullName != null) {
+                    throw new ValidationException(String.format("[UserRepository] User %s already exists", user.getLogin()));
+                }
+                PreparedStatement statement = connection.prepareStatement(INSERT_USER);
+                statement.setString(1, user.getLogin());
+                statement.setString(2, user.getEncryptedPassword());
+                statement.setString(3, user.getFullName());
+                statement.setString(4, user.getRegion());
+                statement.setString(5, user.getGender());
+                statement.setString(6, user.getComment());
+                int id = statement.executeUpdate();
+                statement.close();
+                if (id == 1) {
+                    return user;
+                } else {
+                    String error = "[UserRepository] User not saved";
+                    logger.log(Level.WARNING, error);
+                    throw new DataBaseException(error);
+                }
+            } catch (SQLException e) {
+                String error = "[UserRepository] Can't save user. SQLException " + e.getMessage();
                 logger.log(Level.WARNING, error);
                 throw new DataBaseException(error);
             }
-        } catch (SQLException e) {
-            String error = "[UserRepository] Can't save user. SQLException " + e.getMessage();
-            logger.log(Level.WARNING, error);
-            throw new DataBaseException(error);
         }
-
+        return null;
     }
 
 }
