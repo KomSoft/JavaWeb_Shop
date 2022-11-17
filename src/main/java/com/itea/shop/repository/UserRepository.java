@@ -1,71 +1,91 @@
 package com.itea.shop.repository;
 
+import com.itea.shop.entity.AuthorizedUser;
 import com.itea.shop.entity.UserRegisteringData;
 import com.itea.shop.exception.DataBaseException;
 import com.itea.shop.exception.ValidationException;
-import com.itea.shop.service.CheckUser;
 
 import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class UserRepository {
+    private PostgreSQLJDBC postgreSQLJDBC;
     private Connection connection;
 
-    Logger logger = Logger.getLogger(UserRepository.class.getName());
-
+    public UserRepository(PostgreSQLJDBC postgreSQLJDBC) {
+        this.postgreSQLJDBC = postgreSQLJDBC;
+    }
+/*
     public UserRepository(Connection connection) {
         this.connection = connection;
     }
+*/
 
     public UserRepository() {
+        this.postgreSQLJDBC = null;
         this.connection = null;
     }
 
-    public void checkConnection() throws DataBaseException {
+    public void getConnection() throws DataBaseException {
         if (connection == null) {
-            logger.log(Level.WARNING, "[UserRepository] No DataBase connected");
-            throw new DataBaseException("No DataBase connected");
+            if (postgreSQLJDBC == null) {
+                this.postgreSQLJDBC = new PostgreSQLJDBC();
+            }
+            postgreSQLJDBC.establishConnection();
+            connection = postgreSQLJDBC.getConnection();
+        }
+    }
+/*
+    public void getConnection() throws DataBaseException {
+        if (connection == null) {
+            PostgreSQLJDBC postgreSQLJDBC = new PostgreSQLJDBC();
+            postgreSQLJDBC.establishConnection();
+            connection = postgreSQLJDBC.getConnection();
+        }
+    }
+*/
+    public void closeConnection() throws DataBaseException {
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+            if (postgreSQLJDBC != null) {
+                postgreSQLJDBC.closeConnection();
+            }
+        } catch (SQLException e) {
+            throw new DataBaseException("[UserRepository] Error closing connection" + e.getMessage());
         }
     }
 
     public String getFullNameByLoginAndPassword(String login, String password) throws DataBaseException {
         final String GET_FULLNAME_BY_LOGIN_PASSWORD = "SELECT full_name FROM users WHERE login = ? AND password = ?";
         String fullName = null;
-        checkConnection();
+        getConnection();
         if (login == null || password == null || login.isBlank() || password.isBlank()) {
-            String error = "[UserRepository] Login or password is null or blank";
-            logger.log(Level.WARNING, error);
-            throw new DataBaseException(error);
+            throw new DataBaseException("[UserRepository] Login or password is null or blank");
         }
         try {
             PreparedStatement statement = connection.prepareStatement(GET_FULLNAME_BY_LOGIN_PASSWORD);
-//            Statement statement = this.connection.createStatement();
             statement.setString(1, login);
             statement.setString(2, password);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 fullName = resultSet.getString("full_name");
-//    System.out.println( "login = " + login + ",     password = " + password);
             }
             resultSet.close();
             statement.close();
+//            closeConnection();
             return fullName;
         } catch (SQLException e) {
-            String error = "[UserRepository] SQLException " + e.getMessage();
-            logger.log(Level.WARNING, error);
-            throw new DataBaseException(error);
+            throw new DataBaseException("[UserRepository] SQLException " + e.getMessage());
         }
     }
 
     public String getFullNameByLogin(String login) throws DataBaseException {
         final String GET_FULLNAME_BY_LOGIN = "SELECT full_name FROM users WHERE login = ?";
         String fullName = null;
-        checkConnection();
-        if (login == null) {
-            String error = "[UserRepository] Login is null";
-            logger.log(Level.WARNING, error);
-            throw new DataBaseException(error);
+        getConnection();
+        if (login == null || login.isBlank()) {
+            throw new DataBaseException("[UserRepository] Login is null or empty");
         }
         try {
             PreparedStatement statement = connection.prepareStatement(GET_FULLNAME_BY_LOGIN);
@@ -76,19 +96,18 @@ public class UserRepository {
             }
             resultSet.close();
             statement.close();
+//            closeConnection();
             return fullName;
         } catch (SQLException e) {
-            String error = "[UserRepository] SQLException " + e.getMessage();
-            logger.log(Level.WARNING, error);
-            throw new DataBaseException(error);
+            throw new DataBaseException("[UserRepository] SQLException " + e.getMessage());
         }
     }
 
     public UserRegisteringData saveUser(UserRegisteringData user) throws DataBaseException, ValidationException {
         final String INSERT_USER = "INSERT INTO users (login, password, full_name, region, gender, comment) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
-        if (CheckUser.isUserRegisteringDataCorrect(user)) {
-            checkConnection();
+        if (AuthorizedUser.isUserRegisteringDataCorrect(user)) {
+            getConnection();
 //        check userRegisteringData
             try {
                 String fullName = this.getFullNameByLogin(user.getLogin());
@@ -107,14 +126,10 @@ public class UserRepository {
                 if (id == 1) {
                     return user;
                 } else {
-                    String error = "[UserRepository] User not saved";
-                    logger.log(Level.WARNING, error);
-                    throw new DataBaseException(error);
+                    throw new DataBaseException("[UserRepository] Unknown reason. User not saved");
                 }
             } catch (SQLException e) {
-                String error = "[UserRepository] Can't save user. SQLException " + e.getMessage();
-                logger.log(Level.WARNING, error);
-                throw new DataBaseException(error);
+                throw new DataBaseException("[UserRepository] Can't save user. SQLException " + e.getMessage());
             }
         }
         return null;

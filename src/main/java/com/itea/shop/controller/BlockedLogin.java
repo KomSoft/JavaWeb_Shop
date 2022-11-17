@@ -11,10 +11,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
-import java.sql.Connection;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -23,63 +23,57 @@ import java.util.ResourceBundle;
 public class BlockedLogin extends HttpServlet {
     @Serial
     private static final long serialVersionUID = -6198900590472649299L;
+    public static final String AUTHENTICATED_USER_KEY = "Authenticated-User";
     final int TIME_OUT = 10;
     final int MAX_TRY = 3;
-    private StringBuilder message = new StringBuilder();
     private int count = 0;
     private LocalDateTime endTime = null;
+    private final ResourceBundle bundle = ResourceBundle.getBundle("messages", Locale.UK);
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PostgreSQLJDBC dataBase = new PostgreSQLJDBC();
-        ResourceBundle bundle = ResourceBundle.getBundle("messages", Locale.UK);
         boolean isShowForm = true;
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
+        StringBuilder message = new StringBuilder();
         if (endTime != null) {
             long waitSecond = TIME_OUT - Duration.between(endTime, LocalDateTime.now()).getSeconds();
-            message = new StringBuilder(String.format(bundle.getString("waitForTimeout"), waitSecond));
-//            message = new StringBuilder(String.format(Messages.WAIT_FOR_TIMEOUT, waitSecond));
             isShowForm = waitSecond <= 0;
             if (isShowForm) {
                 count = -1;
                 endTime = null;
+            } else {
+                message.append(String.format(bundle.getString("waitForTimeout"), waitSecond));
             }
         }
         if (count < MAX_TRY) {
             isShowForm = true;
             String login = request.getParameter("login");
             String password = request.getParameter("password");
-            if (login != null) {
+            if (login != null && !login.isBlank()) {
                 try {
-                    Connection connection = dataBase.establishConnection();
-                    UserRepository userRepository = new UserRepository(connection);
+                    UserRepository userRepository = new UserRepository(new PostgreSQLJDBC());
                     String fullName = userRepository.getFullNameByLoginAndPassword(login, UserRegisteringData.encryptPassword(password));
-                    dataBase.closeConnection();
+                    userRepository.closeConnection();
                     if (fullName != null) {
-                        message = new StringBuilder(String.format(bundle.getString("accessGranted"), fullName));
-//                        message = new StringBuilder(String.format(Messages.ACCESS_GRANTED, fullName));
-//                        message = new StringBuilder(Messages.getAccessGrantedForName(fullName));
+                        message.append(MenuForm.getMenu(true));
+                        message.append(String.format(bundle.getString("accessGranted"), fullName));
+                        request.getSession().setAttribute(AUTHENTICATED_USER_KEY, fullName);
                         isShowForm = false;
                     } else {
                         count++;
                         if (count < MAX_TRY) {
-                            message = new StringBuilder();
                             if (count > 0) {
                                 message.append(String.format(bundle.getString("accessDenied"), (MAX_TRY - count)));
-//                                message.append(String.format(Messages.ACCESS_DENIED, (MAX_TRY - count)));
-//                                message.append(Messages.getAccessDenied(MAX_TRY - count));
                             }
                         } else {
                             endTime = LocalDateTime.now();
-                            message = new StringBuilder(String.format(bundle.getString("blockedForTimeout"), TIME_OUT));
-//                            message = new StringBuilder(String.format(Messages.BLOCKED_FOR_TIMEOUT, TIME_OUT));
+                            message.append(String.format(bundle.getString("blockedForTimeout"), TIME_OUT));
                             isShowForm = false;
                         }
                     }
                 } catch (DataBaseException e) {
-                    message = new StringBuilder(String.format(bundle.getString("dataBaseError"), e.getMessage()));
-//                    message = new StringBuilder(String.format(Messages.CANT_CONNECT_DB, e.getMessage()));
+                    message.append(String.format(bundle.getString("dataBaseError"), e.getMessage()));
                     isShowForm = false;
                 }
            }
@@ -91,11 +85,24 @@ public class BlockedLogin extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        StringBuilder outString  = new StringBuilder(MenuForm.MENU);
-        outString.append(LoginForm.LOGIN_FORM);
+        HttpSession session = request.getSession();
+//      If exists Logout_Key parameter - close session (logout) and start new
+        if (request.getParameter(MenuForm.LOGOUT_KEY) != null) {
+            session.invalidate();
+            session = request.getSession(true);
+        }
+        StringBuilder outString = new StringBuilder();
+//      if user is authenticated - show Welcome else show login form
+        if (session.getAttribute(AUTHENTICATED_USER_KEY) == null) {
+            outString.append(MenuForm.getMenu(false));
+            outString.append(LoginForm.LOGIN_FORM);
+        } else {
+            outString.append(MenuForm.getMenu(true));
+            outString.append(String.format(bundle.getString("welcomeBack"), session.getAttribute(AUTHENTICATED_USER_KEY)));
+        }
         out.write(outString.toString());
     }
 

@@ -22,7 +22,7 @@ public class PostgreSQLJDBC {
 //            System.out.println("Opened database successfully");
             return this.connection;
         } catch (SQLException | ClassNotFoundException e) {
-            throw new DataBaseException("No DataBase connected");
+            throw new DataBaseException("Error connection to DataBase. No DB connected");
         }
     }
 
