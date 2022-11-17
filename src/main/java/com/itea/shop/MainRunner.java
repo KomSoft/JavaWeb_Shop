@@ -2,11 +2,6 @@ package com.itea.shop;
 
 import com.itea.shop.utils.Encoding;
 
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 public class MainRunner {
 
     public static void main(String[] args) {
@@ -28,6 +23,7 @@ public class MainRunner {
 */
 //        testDB.closeConnection();
 
+/*
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(StandardCharsets.UTF_8.encode("admin@com.com"));
@@ -35,6 +31,8 @@ public class MainRunner {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+*/
+/*
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
             messageDigest.update(StandardCharsets.UTF_8.encode("admin"));
@@ -42,8 +40,11 @@ public class MainRunner {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(Encoding.md5EncryptionWithSalt("admin@com.com"));
-        System.out.println(Encoding.md5Encryption("admin@com.comcom.itea"));
+*/
+        System.out.println(Encoding.md5Encryption("admin@com.com"));
+//        Md5(admin@com.com) = 32bf81e28acfd72a67e3447a17a2fc4c
+        System.out.println(Encoding.md5Encryption("admin@com.com" + "com.itea"));
+//        Md5(admin@com.comcom.itea) = c49021b227ed59045d443972fa6b1886
         System.out.println(Encoding.md5EncryptionWithSalt("admin@com.com"));
 
     }

@@ -1,32 +1,27 @@
 package com.itea.shop.form;
 
+import com.itea.shop.entity.AuthorizedUser;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.Formatter;
+import java.util.List;
 
 public class RegistrationForm {
     private static final int FIELD_COUNT = 8;
-    private static String[] errors = new String[FIELD_COUNT];
+    private static final String[] errors = new String[FIELD_COUNT];
 
-    private static void setErrors(String errorString) {
-        int iBegin, iEnd;
-        if (errorString == null || errorString.isEmpty()) {
-            for (int i = 0; i < FIELD_COUNT; i++) {
-                errors[i] = "";
-            }
-        } else {
-            iBegin = errorString.indexOf("<li>");
-            for (int i = 0; i < FIELD_COUNT; i++) {
-                iEnd = errorString.indexOf("</li>", iBegin);
-                if (iEnd > 0) {
-                    errors[i] = errorString.substring(iBegin + 4, iEnd);
-                    iBegin = iEnd + 5;
-                } else {
-                    iBegin = errorString.length();
-                    errors[i] = "";
-                }
-            }
+    private static void getErrors(String errorString) {
+        List<String> errorsList = AuthorizedUser.parseErrors(errorString);
+        for (int i = 0; i < FIELD_COUNT; i++) {
+            errors[i] = "";
+        }
+        int size = errorsList == null ? 0 : Math.min(errorsList.size(), FIELD_COUNT);
+//        int size = errorsList == null ? 0 : (errorsList.size() < FIELD_COUNT ? errorsList.size() : FIELD_COUNT);
+        for (int i = 0; i < size; i++) {
+            errors[i] = errorsList.get(i);
         }
     }
+
     public static final String REGISTRATION_FORM = "<center><table border='0'><form action='' method='POST'>" +
             "<tr>" +
             "   <td width='150'>Login</td>" +
@@ -82,11 +77,11 @@ public class RegistrationForm {
             "</tr>" +
             "</table></form></center>";
 
-    public static final String fill(HttpServletRequest request, String errorString) {
+    public static String fill(HttpServletRequest request) {
         final String CHECKED = "checked";
         final String SELECTED = "selected";
         String[] regions = new String[3];
-        setErrors(errorString);
+        getErrors((String) request.getAttribute("errors"));
         Formatter formatter = new Formatter();
         String login = request.getParameter("login") != null ? request.getParameter("login") : "";
         String fullName = request.getParameter("fullName") != null ? request.getParameter("fullName") : "";

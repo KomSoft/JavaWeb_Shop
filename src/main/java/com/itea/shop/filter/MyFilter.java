@@ -1,4 +1,4 @@
-package com.itea.shop.servlets;
+package com.itea.shop.filter;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +12,7 @@ public class MyFilter implements Filter {
     Logger logger = Logger.getLogger(MyFilter.class.getName());
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         logger.log(Level.INFO, "Init Filter");
         pattern = filterConfig.getInitParameter("pattern");
         replacePattern = filterConfig.getInitParameter("replacePattern");

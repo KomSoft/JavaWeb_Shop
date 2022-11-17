@@ -3,12 +3,12 @@ package com.itea.shop.entity;
 import com.itea.shop.utils.Encoding;
 
 public class UserRegisteringData {
-    private String login;
-    private String encryptedPassword;
-    private String fullName;
-    private String region;
-    private String gender;
-    private String comment;
+    private final String login;
+    private final String encryptedPassword;
+    private final String fullName;
+    private final String region;
+    private final String gender;
+    private final String comment;
 
     public UserRegisteringData(String login, String password, String fullName, String region, String gender, String comment) {
         this.login = login;
@@ -46,4 +46,5 @@ public class UserRegisteringData {
     public static String encryptPassword(String password) {
         return Encoding.md5EncryptionWithSalt(password);
     }
+
 }

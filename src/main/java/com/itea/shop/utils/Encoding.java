@@ -13,6 +13,7 @@ public class Encoding {
     public static String md5Encryption(String inputData) {
         String result = null;
         try {
+            System.out.println("Input data: " + inputData);
             MessageDigest messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(StandardCharsets.UTF_8.encode(inputData));
             result = String.format("%032x", new BigInteger(messageDigest.digest()));
